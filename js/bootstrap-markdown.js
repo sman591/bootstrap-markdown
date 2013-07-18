@@ -1,5 +1,5 @@
 /* ===================================================
- * bootstrap-markdown.js v1.1.1
+ * bootstrap-markdown.js v1.1.2
  * http://github.com/toopay/bootstrap-markdown
  * ===================================================
  * Copyright 2013 Taufan Aditya
@@ -30,7 +30,6 @@
     this.$ns          = 'bootstrap-markdown'
     this.$element     = $(element)
     this.$editable    = {el:null, type:null,attrKeys:[], attrValues:[], content:null}
-    this.$cloneEditor = {el:null, type:null,attrKeys:[], attrValues:[], content:null}
     this.$options     = $.extend(true, {}, $.fn.markdown.defaults, options)
     this.$oldContent  = null
     this.$isPreview   = false
@@ -304,7 +303,6 @@
           container = this.$textarea,
           afterContainer = container.next(),
           replacementContainer = $('<div/>',{'class':'md-preview','data-provider':'markdown-preview'}),
-          cloneEditor = this.$cloneEditor,
           content
 
       // Give flag that tell the editor enter preview mode
@@ -312,18 +310,6 @@
       // Disable all buttons
       this.disableButtons('all').enableButtons('cmdWrite')
       this.$editor.find('button.previewToggle').toggle();
-
-      // Save the editor
-      cloneEditor.el = container
-      cloneEditor.type = container.prop('tagName').toLowerCase()
-      cloneEditor.content = container.val()
-
-      $(container[0].attributes).each(function(){
-        cloneEditor.attrKeys.push(this.nodeName)
-        cloneEditor.attrValues.push(this.nodeValue)
-      })
-
-      this.$cloneEditor = cloneEditor
 
       if (typeof callbackContent == 'string') {
         // Set the content based by callback content
@@ -338,7 +324,7 @@
 
       if (afterContainer && afterContainer.attr('class') == 'md-footer') {
         // If there is footer element, insert the preview container before it
-        replacementContainer.insertBefore('.md-footer')
+        replacementContainer.insertBefore(afterContainer)
       } else {
         // Otherwise, just append it after textarea
         container.parent().append(replacementContainer)
@@ -357,30 +343,18 @@
       // Give flag that tell the editor quit preview mode
       this.$isPreview = false
 
-      // Build the original element
-      var container = this.$editor.find('div[data-provider="markdown-preview"]'),
-          cloneEditor = this.$cloneEditor,
-          oldElement = $('<'+cloneEditor.type+'/>')
+      // Obtain the preview container
+      var container = this.$editor.find('div[data-provider="markdown-preview"]')
 
-      $(cloneEditor.attrKeys).each(function(k,v) {
-        oldElement.attr(cloneEditor.attrKeys[k],cloneEditor.attrValues[k])
-      })
-
-      // Set the editor content
-      oldElement.val(cloneEditor.content)
-
-      // Remove the hidden textarea
-      container.prev().remove()
-
-      // Set the editor data
-      container.replaceWith(oldElement)
+      // Remove the preview container
+      container.remove()
 
       // Enable all buttons
       this.enableButtons('all').disableButtons('cmdWrite')
       this.$editor.find('button.previewToggle').toggle();
 
       // Back to the editor
-      this.$textarea = oldElement
+      this.$textarea.show()
       this.__setListener()
 
       return this
@@ -391,7 +365,7 @@
     }
 
   , getContent: function() {
-      return (this.$isPreview) ? this.$cloneEditor.content : this.$textarea.val()
+      return this.$textarea.val()
     }
 
   , setContent: function(content) {
